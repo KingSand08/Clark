@@ -95,14 +95,18 @@ export async function printPage(data, token) {
     chunkData.append('sides', sides);
     chunkData.append('copies', copies);
 
-    //TODO: error handling
-    await fetch(url.href, {
-      method: 'POST',
-      body: chunkData,
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-   });
+    try {
+      const response = await fetch(url.href, {
+        method: 'POST',
+        body: chunkData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      status.responseData = response.data;
+    } catch (err) {
+      status.error = true;
+    }
   }
   
   return status;
