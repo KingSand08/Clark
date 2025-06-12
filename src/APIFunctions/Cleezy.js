@@ -28,7 +28,7 @@ export async function getAllUrls({
     } else {
       status.error = true;
     }
-  } catch (err) {
+  } catch(err) {
     status.error = true;
     status.responseData = err;
   }
@@ -38,8 +38,8 @@ export async function getAllUrls({
 export async function createUrl(url, alias = null, token) {
   let status = new ApiResponse();
   const urlToAdd = { url, alias };
-  const url = new URL('/api/Cleezy/createUrl', BASE_API_URL);
   try {
+    const url = new URL('/api/Cleezy/createUrl', BASE_API_URL);
     const res = await fetch(url.href, {
       method: 'POST',
       headers: {
@@ -54,7 +54,7 @@ export async function createUrl(url, alias = null, token) {
     } else {
       status.error = true;
     }
-  } catch (err) {
+  } catch(err) {
     status.error = true;
     status.responseData = err;
   }
@@ -73,7 +73,7 @@ export async function deleteUrl(aliasIn, token) {
         'Content-Type': 'application/json'
       },
     });
-  } catch (err) {
+  } catch(err) {
     status.error = true;
     status.responseData = err;
   }
