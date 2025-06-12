@@ -61,7 +61,8 @@ router.get('/healthCheck', async (req, res) => {
     });
 });
 
-router.post('/sendPrintRequest', upload.single('file'), async (req, res) => {
+
+router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
   if (!checkIfTokenSent(req)) {
     logger.warn('/sendPrintRequest was requested without a token');
     return res.sendStatus(UNAUTHORIZED);
@@ -74,6 +75,63 @@ router.post('/sendPrintRequest', upload.single('file'), async (req, res) => {
     logger.warn('Printing is disabled, returning 200 to mock the printing server');
     return res.sendStatus(OK);
   }
+
+   const { totalChunks, chunkIdx, copies, sides } = req.body;
+  
+   // TODO: clear temp folder
+   // TODO: error handling
+
+   // reassemble pdf on last chunk received
+   if (Number(chunkIdx) === totalChunks - 1) {
+      const dir = req.file.destination;
+      const chunks = await fs.promises.readdir(dir); 
+      const id = crypto.randomUUID();
+      const pdf = path.join(dir, id + '.pdf');
+
+      for (let chunk of chunks) {
+         if (path.extname(chunk) !== ".CHUNK") continue;
+
+         try {
+            const chunkData = await fs.promises.readFile(path.join(dir, chunk));
+            fs.appendFileSync(pdf, chunkData);
+         } catch (err) {
+            logger.warn('/sendPrintRequest encountered an error when assembling pdf');
+            return res.sendStatus(SERVER_ERROR);
+         }
+      }
+      
+      const stream = await fs.createReadStream(pdf);
+      const data = new FormData(); 
+      data.append('file', stream, {filename: id, type: 'application/pdf'});
+      data.append('copies', copies);
+      data.append('sides', sides);
+      
+      axios.post(PRINTER_URL + '/print', data, {
+         headers: {
+            ...data.getHeaders(),
+         },
+         maxContentLength: Infinity,
+         maxBodyLength: Infinity
+      });
+   }
+
+   res.sendStatus(OK);
+
+  /*
+  const { copies, sides } = req.body;
+  const file = fs.createReadStream(path.join(req.file.destination, 'PDF'));
+  const data = new FormData();
+  data.append('file', file, { filename: "" });
+  data.append('copies', copies);
+  data.append('sides', sides);
+  axios.post(PRINTER_URL + '/print', data, {
+      headers: {
+        ...data.getHeaders(),
+      },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+   });
+   
   const { copies, sides } = req.body;
   const file = req.file;
   const data = new FormData();
@@ -85,7 +143,7 @@ router.post('/sendPrintRequest', upload.single('file'), async (req, res) => {
     {
       headers: {
         ...data.getHeaders(),
-      }
+      },
     })
     .then(() => {
       // delete file from temp folder after printing
@@ -99,6 +157,7 @@ router.post('/sendPrintRequest', upload.single('file'), async (req, res) => {
       logger.error('/sendPrintRequest had an error: ', err);
       res.sendStatus(SERVER_ERROR);
     });
+    */
 });
 
 module.exports = router;
