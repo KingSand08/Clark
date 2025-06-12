@@ -203,7 +203,7 @@ export async function validatePasswordReset(resetToken) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ resetToken })
-      });
+    });
     if (res.ok) {
       const result = await res.json();
       status.responseData = result;
