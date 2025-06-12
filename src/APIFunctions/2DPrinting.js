@@ -81,25 +81,25 @@ export async function printPage(data, token) {
 
   const pdf = data.get('file'); 
 
-  console.log(pdf);
   const CHUNK_SIZE = 1024 * 1024 * 0.5 // 0.5 MB ------- SENT DATA **CANNOT** EXCEED 1 MB 
   const totalChunks = Math.ceil(pdf.size / CHUNK_SIZE);
-  for (let i = 0; i < totalChunks; i++) {
-   let chunkData = new FormData(); 
-   let chunkStart = i * CHUNK_SIZE;
-   let chunk = pdf.slice(chunkStart, chunkStart + CHUNK_SIZE, 'application/pdf');
-   chunkData.append('chunk', chunk, pdf.name + '.CHUNK');
-   chunkData.append('totalChunks', totalChunks);
-   chunkData.append('chunkIdx', i);
-   chunkData.append('sides', data.get('sides'));
-   chunkData.append('copies', data.get('copies'));
 
-   //TODO: error handling
-   await fetch(url.href, {
+  for (let i = 0; i < totalChunks; i++) {
+    let chunkData = new FormData(); 
+    let chunkStart = i * CHUNK_SIZE;
+    let chunk = pdf.slice(chunkStart, chunkStart + CHUNK_SIZE);
+    chunkData.append('chunk', chunk, pdf.name + '.CHUNK');
+    chunkData.append('totalChunks', totalChunks);
+    chunkData.append('chunkIdx', i);
+    chunkData.append('sides', data.get('sides'));
+    chunkData.append('copies', data.get('copies'));
+
+    //TODO: error handling
+    await fetch(url.href, {
       method: 'POST',
       body: chunkData,
       headers: {
-         'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       }
    });
   }

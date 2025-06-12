@@ -75,63 +75,49 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     logger.warn('Printing is disabled, returning 200 to mock the printing server');
     return res.sendStatus(OK);
   }
-
-   const { totalChunks, chunkIdx, copies, sides } = req.body;
   
-   // TODO: clear temp folder
-   // TODO: error handling
+  // TODO: clear temp folder
+  // TODO: error handling
 
-   // reassemble pdf on last chunk received
-   if (Number(chunkIdx) === totalChunks - 1) {
-      const dir = req.file.destination;
-      const chunks = await fs.promises.readdir(dir); 
-      const id = crypto.randomUUID();
-      const pdf = path.join(dir, id + '.pdf');
+  const { totalChunks, chunkIdx, copies, sides } = req.body;
 
-      for (let chunk of chunks) {
-         if (path.extname(chunk) !== ".CHUNK") continue;
+  // reassemble pdf on last chunk received
+  if (Number(chunkIdx) === totalChunks - 1) {
+    const dir = req.file.destination;
+    const chunks = await fs.promises.readdir(dir); 
+    const id = crypto.randomUUID();
+    const pdf = path.join(dir, id + '.pdf');
 
-         try {
-            const chunkData = await fs.promises.readFile(path.join(dir, chunk));
-            fs.appendFileSync(pdf, chunkData);
-         } catch (err) {
-            logger.warn('/sendPrintRequest encountered an error when assembling pdf');
-            return res.sendStatus(SERVER_ERROR);
-         }
+    for (let chunk of chunks) {
+      if (path.extname(chunk) !== ".CHUNK") continue;
+
+      try {
+        const chunkData = await fs.promises.readFile(path.join(dir, chunk));
+        fs.appendFileSync(pdf, chunkData);
+      } catch (err) {
+        logger.warn('/sendPrintRequest encountered an error while assembling pdf');
+        return res.sendStatus(SERVER_ERROR);
       }
-      
-      const stream = await fs.createReadStream(pdf);
-      const data = new FormData(); 
-      data.append('file', stream, {filename: id, type: 'application/pdf'});
-      data.append('copies', copies);
-      data.append('sides', sides);
-      
-      axios.post(PRINTER_URL + '/print', data, {
-         headers: {
-            ...data.getHeaders(),
-         },
-         maxContentLength: Infinity,
-         maxBodyLength: Infinity
-      });
-   }
+    }
 
-   res.sendStatus(OK);
+    const stream = await fs.createReadStream(pdf);
+    const data = new FormData(); 
+    data.append('file', stream, {filename: id, type: 'application/pdf'});
+    data.append('copies', copies);
+    data.append('sides', sides);
 
-  /*
-  const { copies, sides } = req.body;
-  const file = fs.createReadStream(path.join(req.file.destination, 'PDF'));
-  const data = new FormData();
-  data.append('file', file, { filename: "" });
-  data.append('copies', copies);
-  data.append('sides', sides);
-  axios.post(PRINTER_URL + '/print', data, {
+    axios.post(PRINTER_URL + '/print', data, {
       headers: {
         ...data.getHeaders(),
       },
       maxContentLength: Infinity,
       maxBodyLength: Infinity
-   });
-   
+    });   
+  }
+
+  res.sendStatus(OK);
+
+  /*
   const { copies, sides } = req.body;
   const file = req.file;
   const data = new FormData();
