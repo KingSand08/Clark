@@ -61,7 +61,6 @@ router.get('/healthCheck', async (req, res) => {
     });
 });
 
-
 router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
   if (!checkIfTokenSent(req)) {
     logger.warn('/sendPrintRequest was requested without a token');
@@ -78,6 +77,7 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
   
   // TODO: clear temp folder
   // TODO: error handling
+  // TODO: verify if server actually received chunk??
 
   const { totalChunks, chunkIdx, copies, sides } = req.body;
 
@@ -85,7 +85,7 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
   if (Number(chunkIdx) === totalChunks - 1) {
     const dir = req.file.destination;
     const chunks = await fs.promises.readdir(dir); 
-    const id = crypto.randomUUID();
+    const id = crypto.randomUUID(); // this probably isn't necessary 
     const pdf = path.join(dir, id + '.pdf');
 
     for (let chunk of chunks) {
@@ -106,16 +106,32 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     data.append('copies', copies);
     data.append('sides', sides);
 
-    axios.post(PRINTER_URL + '/print', data, {
-      headers: {
-        ...data.getHeaders(),
-      },
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity
-    });   
-  }
+    try {
+      // full pdf can be sent to quasar no problem 
+      await axios.post(PRINTER_URL + '/print', data, {
+        headers: {
+          ...data.getHeaders(),
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+      });
 
-  res.sendStatus(OK);
+      const tempFiles = await fs.promises.readdir(dir);
+      for (let temp of tempFiles) {
+        await fs.promises.unlink(path.join(dir, temp), err => {
+          logger.error('failed to delete a file while clearing out temp folder');
+          res.sendStatus(SERVER_ERROR);
+        })
+      }
+
+      res.sendStatus(OK);
+    } catch (err) {
+      logger.error('/sendPrintRequest had an error: ', err);
+      res.sendStatus(SERVER_ERROR);
+    } 
+  } else {
+    res.sendStatus(OK);
+  }
 
   /*
   const { copies, sides } = req.body;
