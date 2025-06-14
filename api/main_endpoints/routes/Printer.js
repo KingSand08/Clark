@@ -74,18 +74,18 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     logger.warn('Printing is disabled, returning 200 to mock the printing server');
     return res.sendStatus(OK);
   }
-  
+
   const { totalChunks, chunkIdx, copies, sides } = req.body;
 
   // reassemble pdf on last chunk received
   if (Number(chunkIdx) === totalChunks - 1) {
     const dir = req.file.destination;
-    const chunks = await fs.promises.readdir(dir); 
-    const id = crypto.randomUUID(); // this probably isn't necessary 
+    const chunks = await fs.promises.readdir(dir);
+    const id = crypto.randomUUID(); // this probably isn't necessary
     const pdf = path.join(dir, id + '.pdf');
 
     for (let chunk of chunks) {
-      if (path.extname(chunk) !== ".CHUNK") continue;
+      if (path.extname(chunk) !== '.CHUNK') continue;
 
       try {
         const chunkData = await fs.promises.readFile(path.join(dir, chunk));
@@ -97,13 +97,13 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     }
 
     const stream = await fs.createReadStream(pdf);
-    const data = new FormData(); 
+    const data = new FormData();
     data.append('file', stream, {filename: id, type: 'application/pdf'});
     data.append('copies', copies);
     data.append('sides', sides);
 
     try {
-      // full pdf can be sent to quasar no problem 
+      // full pdf can be sent to quasar no problem
       await axios.post(PRINTER_URL + '/print', data, {
         headers: {
           ...data.getHeaders(),
@@ -117,14 +117,14 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
         await fs.promises.unlink(path.join(dir, temp), err => {
           logger.error('/sendPrintRequest failed to delete a file while clearing out temp folder, error msg: ', err);
           res.sendStatus(SERVER_ERROR);
-        })
+        });
       }
 
       res.sendStatus(OK);
     } catch (err) {
       logger.error('/sendPrintRequest had an error: ', err);
       res.sendStatus(SERVER_ERROR);
-    } 
+    }
   } else {
     res.sendStatus(OK);
   }
