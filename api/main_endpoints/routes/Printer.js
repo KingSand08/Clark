@@ -75,10 +75,6 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     return res.sendStatus(OK);
   }
   
-  // TODO: clear temp folder
-  // TODO: error handling
-  // TODO: verify if server actually received chunk??
-
   const { totalChunks, chunkIdx, copies, sides } = req.body;
 
   // reassemble pdf on last chunk received
@@ -119,7 +115,7 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
       const tempFiles = await fs.promises.readdir(dir);
       for (let temp of tempFiles) {
         await fs.promises.unlink(path.join(dir, temp), err => {
-          logger.error('failed to delete a file while clearing out temp folder');
+          logger.error('/sendPrintRequest failed to delete a file while clearing out temp folder, error msg: ', err);
           res.sendStatus(SERVER_ERROR);
         })
       }
@@ -132,34 +128,6 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
   } else {
     res.sendStatus(OK);
   }
-
-  /*
-  const { copies, sides } = req.body;
-  const file = req.file;
-  const data = new FormData();
-  data.append('file', fs.createReadStream(file.path), { filename: file.originalname });
-  data.append('copies', copies);
-  data.append('sides', sides);
-  axios.post(PRINTER_URL + '/print',
-    data,
-    {
-      headers: {
-        ...data.getHeaders(),
-      },
-    })
-    .then(() => {
-      // delete file from temp folder after printing
-      fs.unlink(file.path, (err) => {
-        if (err) {
-          logger.error(`Unable to delete file at path ${file.path}:`, err);
-        }
-      });
-      res.sendStatus(OK);
-    }).catch((err) => {
-      logger.error('/sendPrintRequest had an error: ', err);
-      res.sendStatus(SERVER_ERROR);
-    });
-    */
 });
 
 module.exports = router;

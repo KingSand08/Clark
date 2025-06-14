@@ -79,14 +79,14 @@ export async function printPage(data, token) {
   let status = new ApiResponse();
   const url = new URL('/api/Printer/sendPrintRequest', BASE_API_URL);
 
-  const pdf = data.get('file'); 
+  const pdf = data.get('file');
   const sides = data.get('sides');
   const copies = data.get('copies');
-  const CHUNK_SIZE = 1024 * 1024 * 0.5 // 0.5 MB ------- SENT DATA **CANNOT** EXCEED 1 MB 
+  const CHUNK_SIZE = 1024 * 1024 * 0.5; // 0.5 MB ------- SENT DATA **CANNOT** EXCEED 1 MB
   const totalChunks = Math.ceil(pdf.size / CHUNK_SIZE);
 
   for (let i = 0; i < totalChunks; i++) {
-    let chunkData = new FormData(); 
+    let chunkData = new FormData();
     let chunkStart = i * CHUNK_SIZE;
     let chunk = pdf.slice(chunkStart, chunkStart + CHUNK_SIZE);
     chunkData.append('chunk', chunk, pdf.name + '_' + i + '.CHUNK');
@@ -103,12 +103,13 @@ export async function printPage(data, token) {
           'Authorization': `Bearer ${token}`
         }
       });
+
       status.responseData = response.data;
     } catch (err) {
       status.error = true;
     }
   }
-  
+
   return status;
 }
 
