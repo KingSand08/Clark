@@ -52,16 +52,16 @@ function deleteCard(cardBytes) {
         { cardBytes: cardBytes }
         , (error, result) => {
           if (error) {
-              logger.error('deleteCard got an error querying mongodb: ', error);
-              return resolve(false);
-            }
-            if(!result){
-              logger.info(`Card:${cardBytes} not found in the database`);
-              return resolve(false);
-            }
-            return resolve(!!result);
+            logger.error('deleteCard got an error querying mongodb: ', error);
+            return resolve(false);
+          }
+          if(!result){
+            logger.info(`Card:${cardBytes} not found in the database`);
+            return resolve(false);
+          }
+          return resolve(!!result);
         }
-      )
+      );
     } catch (error) {
       logger.error('deleteCard caught an error: ', error);
       return resolve(false);
@@ -147,7 +147,7 @@ router.get('/delete', async (req, res) => {
   }
 
   if (apiKey !== API_KEY) {
-    return res.sendStatus(UNAUTHORIZED); 
+    return res.sendStatus(UNAUTHORIZED);
   }
 
   if (!await checkIfCardExists(cardBytes)) { // if card we're trying to delete doesn't exist, error 404
