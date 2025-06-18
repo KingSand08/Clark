@@ -82,6 +82,7 @@ export async function printPage(data, token) {
   const pdf = data.get('file');
   const sides = data.get('sides');
   const copies = data.get('copies');
+  const id = data.get('id');
   const CHUNK_SIZE = 1024 * 1024 * 0.5; // 0.5 MB ------- SENT DATA **CANNOT** EXCEED 1 MB
   const totalChunks = Math.ceil(pdf.size / CHUNK_SIZE);
 
@@ -89,11 +90,15 @@ export async function printPage(data, token) {
     let chunkData = new FormData();
     let chunkStart = i * CHUNK_SIZE;
     let chunk = pdf.slice(chunkStart, chunkStart + CHUNK_SIZE);
-    chunkData.append('chunk', chunk, pdf.name + '_' + i + '.CHUNK');
+    chunkData.append('chunk', chunk, id + '_' + i + '.CHUNK');
     chunkData.append('totalChunks', totalChunks);
     chunkData.append('chunkIdx', i);
-    chunkData.append('sides', sides);
-    chunkData.append('copies', copies);
+
+    if (i === totalChunks - 1) {
+      chunkData.append('sides', sides);
+      chunkData.append('copies', copies);
+      chunkData.append('id', id);
+    }
 
     try {
       const response = await fetch(url.href, {

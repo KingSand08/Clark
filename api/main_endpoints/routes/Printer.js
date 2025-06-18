@@ -75,17 +75,18 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     return res.sendStatus(OK);
   }
 
-  const { totalChunks, chunkIdx, copies, sides } = req.body;
+  const { totalChunks, chunkIdx } = req.body;
 
   // reassemble pdf on last chunk received
   if (Number(chunkIdx) === totalChunks - 1) {
+    const { copies, sides, id } = req.body;
     const dir = req.file.destination;
     const chunks = await fs.promises.readdir(dir);
-    const id = crypto.randomUUID(); // this probably isn't necessary
     const pdf = path.join(dir, id + '.pdf');
 
     for (let chunk of chunks) {
       if (path.extname(chunk) !== '.CHUNK') continue;
+      if (!path.basename(chunk).includes(id)) continue;
 
       try {
         const chunkData = await fs.promises.readFile(path.join(dir, chunk));
@@ -114,6 +115,8 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
 
       const tempFiles = await fs.promises.readdir(dir);
       for (let temp of tempFiles) {
+        if (!path.basename(temp).includes(id)) continue;
+
         await fs.promises.unlink(path.join(dir, temp), err => {
           logger.error('/sendPrintRequest failed to delete a file while clearing out temp folder, error msg: ', err);
           res.sendStatus(SERVER_ERROR);
@@ -127,6 +130,24 @@ router.post('/sendPrintRequest', upload.single('chunk'), async (req, res) => {
     }
   } else {
     res.sendStatus(OK);
+  }
+});
+
+router.post('/cleanUpChunks', express.json(), async (req, res) => {
+  if (!PRINTING.ENABLED) {
+    logger.warn('Printing is disabled, chunk clean up will not commence');
+  }
+
+  const id = req.body.id;
+  const dir = path.join(__dirname, 'printing');
+
+  const tempFiles = await fs.promises.readdir(dir);
+  for (let temp of tempFiles) {
+    if (!path.basename(temp).includes(id)) continue;
+
+    await fs.promises.unlink(path.join(dir, temp), err => {
+      logger.error('/cleanUpChunks failed to delete a file while clearing out temp folder, error msg: ', err);
+    });
   }
 });
 

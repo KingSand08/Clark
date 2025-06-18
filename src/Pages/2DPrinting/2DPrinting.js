@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PageSelectDropdown from './PageSelectDropdown';
 import {
   parseRange,
@@ -11,6 +11,7 @@ import { PDFDocument } from 'pdf-lib';
 import { healthCheck } from '../../APIFunctions/2DPrinting';
 import ConfirmationModal from
   '../../Components/DecisionModal/ConfirmationModal.js';
+import { BASE_API_URL } from '../../Enums';
 
 export default function Printing(props) {
   const [dragActive, setDragActive] = useState(false);
@@ -30,6 +31,7 @@ export default function Printing(props) {
   const [printerHealthy, setPrinterHealthy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [PdfFile, setPdfFile] = useState(null);
+  const pdfId = useRef('');
 
   async function checkPrinterHealth() {
     setLoading(true);
@@ -48,6 +50,26 @@ export default function Printing(props) {
       setPagesPrinted(result.pagesUsed);
     }
   }
+
+  // those chunks gotta meet their maker!!!!!!!!!!!!!!!!!!!!!!!!
+  function cleanUpChunks(e) {
+    const url = new URL('/api/Printer/cleanUpChunks', BASE_API_URL);
+    fetch(url.href, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: pdfId.current }),
+      keepalive: true
+    });
+  }
+
+  useEffect(() => {
+    window.addEventListener('beforeunload', cleanUpChunks);
+    return () => {
+      window.removeEventListener('beforeunload', cleanUpChunks);
+    };
+  });
 
   useEffect(() => {
     checkPrinterHealth();
@@ -187,9 +209,12 @@ export default function Printing(props) {
   async function handlePrinting() {
     // send print request with files and configuratiosn in formData
     const data = new FormData();
+    pdfId.current = crypto.randomUUID();
+
     data.append('file', PdfFile);
     data.append('sides', sides);
     data.append('copies', copies);
+    data.append('id', pdfId.current);
     let status = await printPage(data, props.user.token);
 
     if (!status.error) {
@@ -440,5 +465,3 @@ export default function Printing(props) {
     </div>
   );
 }
-
-
