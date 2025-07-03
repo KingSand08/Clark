@@ -37,6 +37,29 @@ services:
       - mongodb
     depends_on:
       - mongodb
+  dessert-api:
+    container_name: sce-dessert-api-dev
+    build:
+      context: ./api
+      dockerfile: ./dessert_api/Dockerfile.dev
+    environment:
+      - DATABASE_HOST=sce-mongodb-dev
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+      - WATCHPACK_POLLING=${WATCHPACK_POLLING}
+    ports:
+      - '8085:8085'
+    restart: 'on-failure'
+    stdin_open: true
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
+    volumes:
+      - ./api/config:/app/config
+      - ./api/util:/app/util
+      - ./api/dessert_api:/app/dessert_api
+      - ./api/package.json:/app/package.json
   main-endpoints:
     container_name: sce-main-endpoints
     build:

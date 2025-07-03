@@ -27,6 +27,8 @@ import URLShortenerPage from './Pages/URLShortener/URLShortener';
 
 import EmailPreferencesPage from './Pages/EmailPreferences/EmailPreferences';
 
+import DessertProblemPage from './Pages/DessertProblem/DessertProblem';
+
 import sendUnsubscribeEmail from './Pages/Profile/admin/SendUnsubscribeEmail';
 import Messaging from './Pages/Messaging/Messaging.js';
 
@@ -151,6 +153,7 @@ export default function Routing({ appProps }) {
     { Component: AboutPage, path: '/about'},
     { Component: ProjectsPage, path: '/projects'},
     { Component: EmailPreferencesPage, path: '/emailPreferences' },
+    { Component: DessertProblemPage, path: '/desserts'},
   ];
   return (
     <div>

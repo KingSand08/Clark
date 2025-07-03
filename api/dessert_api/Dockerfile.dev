@@ -1,0 +1,25 @@
+FROM node:alpine
+
+WORKDIR /app
+
+COPY package.json ./
+
+RUN npm install --production
+
+RUN npm install -g nodemon
+
+COPY ./dessert_api /app/dessert_api
+
+COPY ./util /app/util
+
+EXPOSE 8085
+
+ARG GENERAL_API_URL
+
+ARG NODE_ENV
+
+ARG VERIFICATION_BASE_URL
+
+ARG DATABASE_HOST
+
+CMD ["node", "dessert_api/server.js"]
