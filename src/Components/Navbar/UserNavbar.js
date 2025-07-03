@@ -9,7 +9,8 @@ export default function UserNavBar(props) {
   const unauthedRoutes = [
     { title: 'About', route: '/about' },
     { title: 'Projects', route: '/projects' },
-    { title: 'Spartan Compass', route: '/spartan-compass' }
+    { title: 'Spartan Compass', route: '/spartan-compass' },
+    { title: 'Desserts', route: '/desserts' }
   ];
 
 

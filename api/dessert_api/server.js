@@ -4,7 +4,7 @@ function main() {
   const API_ENDPOINTS = [
     __dirname + '/routes/Dessert.js',
   ];
-  const dessertServer = new SceHttpServer(API_ENDPOINTS, 808, '/dessert_api/');
+  const dessertServer = new SceHttpServer(API_ENDPOINTS, 8085, '/dessert_api/');
   dessertServer.initializeEndpoints().then(() => {
     dessertServer.openConnection();
   });

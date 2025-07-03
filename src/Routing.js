@@ -28,6 +28,7 @@ import URLShortenerPage from './Pages/URLShortener/URLShortener';
 import EmailPreferencesPage from './Pages/EmailPreferences/EmailPreferences';
 
 import DessertProblemPage from './Pages/DessertProblem/DessertProblem';
+import DessertAdminPage from './Pages/DessertAdmin/DessertAdmin';
 
 import sendUnsubscribeEmail from './Pages/Profile/admin/SendUnsubscribeEmail';
 import Messaging from './Pages/Messaging/Messaging.js';
@@ -145,6 +146,13 @@ export default function Routing({ appProps }) {
       redirect: '/',
       inAdminNavbar: true
     },
+    {
+      Component: DessertAdminPage,
+      path: '/dessert-admin',
+      allowedIf: userIsOfficerOrAdmin,
+      redirect: '/',
+      inAdminNavbar: true
+    },
   ];
   const signedOutRoutes = [
     { Component: Home, path: '/' },
@@ -154,6 +162,7 @@ export default function Routing({ appProps }) {
     { Component: ProjectsPage, path: '/projects'},
     { Component: EmailPreferencesPage, path: '/emailPreferences' },
     { Component: DessertProblemPage, path: '/desserts'},
+    { Component: DessertAdminPage, path: '/dessert-admin'},
   ];
   return (
     <div>
